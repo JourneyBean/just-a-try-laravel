@@ -3,8 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use App\Models\User;
 use Inertia\Inertia;
-use App\Http\Controllers\Dashboard\ClientsController;
-use App\Http\Controllers\Dashboard\UsersController;
+use Illuminate\Http\Request;
+use App\Http\Controllers\DashboardAdmin\ClientsController;
+use App\Http\Controllers\DashboardAdmin\UsersController;
+use App\Http\Controllers\DashboardUser\GeneralController;
 
 Route::get('/dashboard', function () {
     // return Inertia::render('Dashboard');
@@ -46,17 +48,29 @@ Route::middleware(['auth', 'verified'])->group(function() {
             'isAdmin' => Auth::user()->can('admin'),
             'userName' => Auth::user()->name,
             'userEmail' => Auth::user()->email,
+            'tokens' => GeneralController::getTokens(Auth::id()),
         ]);
     })->name('dashboard_authorize');
     
-    Route::get('/dashboard/sessions', function (User $user) {
+    Route::get('/dashboard/sessions', function (Request $request, User $user) {
         return Inertia::render('Dashboard/Sessions', [
             'dashboardIndexName' => Route::currentRouteName(),
             'isAdmin' => Auth::user()->can('admin'),
             'userName' => Auth::user()->name,
             'userEmail' => Auth::user()->email,
+            'sessions' => GeneralController::getSessions(Auth::id()),
         ]);
     })->name('dashboard_sessions');
+
+    Route::post('/dashboard/sessions/delete', [GeneralController::class, 'deleteSession'])
+        ->name('dashboard_session_delete');
+    
+    Route::post('/dashboard/token/delete', [GeneralController::class, 'deleteToken'])
+        ->name('dashboard_token_delete');
+
+    Route::post('/dashboard/authenticate/resetPassword', [GeneralController::class, 'changePassword'])
+        ->name('dashboard_authenticate_resetPassword');
+
 
 });
 

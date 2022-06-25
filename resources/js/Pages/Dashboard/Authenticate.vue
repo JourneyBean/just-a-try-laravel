@@ -1,18 +1,14 @@
 <script setup>
-import { Head, useForm } from '@inertiajs/inertia-vue3';
-import { ref } from 'vue';
-import { ElDivider, ElCard, ElForm, ElFormItem, ElInput, ElButton } from 'element-plus';
+import { Head } from '@inertiajs/inertia-vue3';
+import { reactive, ref } from 'vue';
+import { ElForm, ElFormItem, ElInput, ElButton, ElMessage } from 'element-plus';
 import {
     Check,
-    Delete,
-    Edit,
-    Message,
-    Search,
-    Star,
 } from '@element-plus/icons-vue'
 import DashboardLayout from '@/DashboardLayouts/Dashboard.vue';
 import PanelSettingsComponent from '@/DashboardLayouts/PanelSettingsComponent.vue';
 import 'element-plus/dist/index.css';
+import axios from 'axios';
 
 // Inertia.js
 defineProps({
@@ -21,16 +17,36 @@ defineProps({
     email: String,
 })
 
-const formResetPassword = useForm({
-    email: '',
+const labelPosition = ref('right')
+
+const formResetPassword = reactive({
+    old_password: '',
+    password: '',
+    password_confirmation: '',
 });
 
-const submit = () => {
-    formResetPassword.post(route('password.email'));
+const handleResetPassword = () => {
+    axios.post(route('dashboard_authenticate_resetPassword'), formResetPassword)
+        .then((response) => {
+            if (response.data.status == 'success') {
+                ElMessage({
+                    type: 'success',
+                    message: '操作成功'
+                })
+            } else {
+                ElMessage({
+                    type: 'error',
+                    message: '操作失败',
+                })
+            }
+        })
+        .catch(function (error) {
+            ElMessage({
+                type: 'error',
+                message: '操作失败',
+            })
+        });
 };
-
-const labelPosition = ref('right')
-const input = ref('')
 
 </script>
 
@@ -49,15 +65,21 @@ const input = ref('')
             <panel-settings-component>
                 <template #title>重置密码</template>
                 <template #content>
-                    <el-form :label-position="labelPosition" :inline="true" ref="changeEmailRef" label-width="100px"
-                        style="max-width: 500px" @submit.prevent="submit">
+                    <el-form :model="formResetPassword" :label-position="labelPosition" :inline="true"
+                        label-width="100px" style="max-width: 500px">
 
-                        <el-form-item label="当前邮箱">
-                            <el-input id="email" :type="email" v-model="formResetPassword.email" :placeholder="$page.props.userEmail" disabled />
+                        <el-form-item label="旧密码">
+                            <el-input type="password" v-model="formResetPassword.old_password" />
+                        </el-form-item>
+                        <el-form-item label="新密码">
+                            <el-input type="password" v-model="formResetPassword.password" />
+                        </el-form-item>
+                        <el-form-item label="确认新密码">
+                            <el-input type="password" v-model="formResetPassword.password_confirmation" />
                         </el-form-item>
 
                         <el-form-item>
-                            <el-button native-type="submit" type="primary" :icon="Check" :disabled="formResetPassword.processing" :class="{'opacity-25': formResetPassword.processing}">发送重置邮件</el-button>
+                            <el-button type="primary" :icon="Check" @click="handleResetPassword">重置密码</el-button>
                         </el-form-item>
 
                     </el-form>
